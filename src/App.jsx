@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import './App.css'; // optional for styling
+import './App.css';
 
 const housemates = ['瑀石', '玮杰'];
 const prices = [7, 15];
@@ -69,49 +69,51 @@ function App() {
   return (
     <div className="App">
       <h1>Unit 2 Dinner 🍽️</h1>
-      <Calendar
-        onClickDay={handleDayClick}
-        tileClassName={({ date }) =>
-          isDinnerDay(date) ? 'dinner-day' : null
-        }
-      />
+      <div style={{display: 'flex', gap: '1rem'}}>
+        <Calendar
+          onClickDay={handleDayClick}
+          tileClassName={({ date }) =>
+            isDinnerDay(date) ? 'dinner-day' : null
+          }
+        />
 
-      {selectedDate && (
-        <div className="modal">
-          <h2>Dinner on {selectedDate.toDateString()}</h2>
-          <label>
-            Price per person:
-            <select value={price} onChange={(e) => setPrice(Number(e.target.value))}>
-              {prices.map((p) => (
-                <option key={p} value={p}>${p}</option>
-              ))}
-              <option value="custom">Custom</option>
-            </select>
-            {price === 'custom' && (
-              <input
-                type="number"
-                value={customPrice}
-                onChange={(e) => setCustomPrice(e.target.value)}
-                placeholder="Enter custom price"
-              />
-            )}
-          </label>
-          <div>
-            {housemates.map((name) => (
-              <label key={name}>
+        {selectedDate && (
+          <div className="modal">
+            <h2>Dinner on {selectedDate.toDateString()}</h2>
+            <label>
+              Price per person:
+              <select value={price} onChange={(e) => setPrice(Number(e.target.value))}>
+                {prices.map((p) => (
+                  <option key={p} value={p}>${p}</option>
+                ))}
+                <option value="custom">Custom</option>
+              </select>
+              {price === 'custom' && (
                 <input
-                  type="checkbox"
-                  checked={attendees.includes(name)}
-                  onChange={() => toggleAttendee(name)}
+                  type="number"
+                  value={customPrice}
+                  onChange={(e) => setCustomPrice(e.target.value)}
+                  placeholder="Enter custom price"
                 />
-                {name}
-              </label>
-            ))}
+              )}
+            </label>
+            <div>
+              {housemates.map((name) => (
+                <label key={name}>
+                  <input
+                    type="checkbox"
+                    checked={attendees.includes(name)}
+                    onChange={() => toggleAttendee(name)}
+                  />
+                  {name}
+                </label>
+              ))}
+            </div>
+            <button onClick={saveDinner}>Save Dinner</button>
+            <button onClick={() => setSelectedDate(null)}>Cancel</button>
           </div>
-          <button onClick={saveDinner}>Save Dinner</button>
-          <button onClick={() => setSelectedDate(null)}>Cancel</button>
-        </div>
-      )}
+        )}
+      </div>
 
       <h2>Monthly Summary 💰</h2>
       <ul>
