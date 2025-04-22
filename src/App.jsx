@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import './App.css';
-import { collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from "firebase/firestore";
-import { db } from "./firebase";
+import { collection, doc, setDoc, deleteDoc, onSnapshot, getFirestore } from "firebase/firestore";
+import { auth, db } from "./firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 const housemates = ['瑀石', '玮杰'];
 const prices = [7, 15];
@@ -18,11 +19,28 @@ function App() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [details, setDetails] = useState([]);
+  const [user, setUser] = useState(null);
+  const [isFirestoreReady, setIsFirestoreReady] = useState(false);
 
+  useEffect(() => {
+    // Listen for changes in authentication state
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        console.log("User signed in:", currentUser);
+        setUser(currentUser);  // Set user state when signed in
+      } else {
+        console.log("User not signed in");
+        setUser(null);  // Clear user state if not signed in
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
 
   // Real-time fetching of dinners from Firestore
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "dinners"), (snapshot) => {
+    if (user) {
+      const unsubscribe = onSnapshot(collection(db, "dinners"), (snapshot) => {
       const dinnersData = {};
       snapshot.forEach((doc) => {
         dinnersData[doc.id] = doc.data();
@@ -32,7 +50,7 @@ function App() {
     });
   
     return () => unsubscribe(); // Cleanup listener on unmount
-  }, []);
+  }}, [user]);
   
   if (loading) {
     return <div>Loading...</div>; // Only while fetching data
@@ -200,16 +218,38 @@ function App() {
       {selectedPerson && (
         <div className="modal-overlay">
           <div className="modal">
-            <h2>Details for {selectedPerson}</h2>
-            <ul style={{padding: 0}}>
+          <h2>Details for {selectedPerson}</h2>
+            <ul style={{ padding: "10px 20px", listStyleType: "none" }}>
               {details.length > 0 ? (
-                details.map(({ date, price }, index) => (
-                  <li key={index} style={{listStyleType: 'none', padding: 0}}>
-                    {new Date(date).toLocaleDateString()} - ${price}
-                  </li>
-                ))
+                details
+                  .sort((a, b) => new Date(a.date) - new Date(b.date))  // Sort dates in ascending order
+                  .map(({ date, price }, index) => (
+                    <li
+                      key={index}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "8px 0",
+                        borderBottom: "1px solid #f0f0f0",
+                        fontSize: "14px",
+                        color: "#333",
+                      }}
+                    >
+                      <span>{new Date(date).toLocaleDateString()}</span>
+                      <span>${price}</span>
+                    </li>
+                  ))
               ) : (
-                <li>No records found for this month.</li>
+                <li
+                  style={{
+                    textAlign: "center",
+                    color: "#888",
+                    padding: "20px 0",
+                    fontStyle: "italic",
+                  }}
+                >
+                  No records found for this month.
+                </li>
               )}
             </ul>
             <button onClick={() => setSelectedPerson(null)}>Close</button>

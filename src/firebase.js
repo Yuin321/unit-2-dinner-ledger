@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, signInAnonymously } from "firebase/auth";
-
+import { onAuthStateChanged } from "firebase/auth";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -28,4 +28,12 @@ signInAnonymously(auth)
   .catch((error) => {
     console.error("❌ Anonymous sign-in error:", error);
   });
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log("User is signed in:", user);
+    } else {
+      console.log("No user is signed in");
+    }
+  });  
 export { auth, db };
